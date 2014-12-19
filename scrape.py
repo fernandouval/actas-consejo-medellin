@@ -71,13 +71,10 @@ def speakers(line, special = 0):
 
   deco_name = name.decode('utf-8')
   personId = ''.join(x for x in unicodedata.normalize('NFKD', deco_name) if x in string.ascii_letters).lower().replace(' ', '-')
-  print personId
   #guardamos el speaker
   speaker = '#'+personId
   #SPEAKERS
-  print 'Person: '+personId
   if personId not in persons:
-    print 'No en persons'
     person = {
       'href' : "/ontology/person/127.0.0.1/"+personId,
       'id' : personId,
