@@ -11,10 +11,10 @@ speach = ""
 speaker = ""
 persons = []
 titulos = [
-  'concejal ', 
+ 'concejal ', 
   'concejala ', 
   'La Presidencia', 
-  'señor ', 
+  'señor', 
   'señora ', 
   'comunidad ', 
   'doctor ',
@@ -34,7 +34,55 @@ titulos = [
   'estudiante ',
   'Director de Planeación ',
   'presidente del Concejo ',
-  'personero '
+  'personero ',
+  'funcionaria de la Secretaría de Las Mujeres ',
+  'el representante de la Secretaría de Seguridad ',
+  'el representante del Área Metropolitana del Valle de Aburrá ',
+  'en representación de Sintraemdes ',
+  'en representación de Sintraemdes Medellín ',
+  'la Secretaría del Medio Ambiente ',
+  'contralora (e ) ',
+  'representante legal de la Junta de Acción Comunal de Bellavista ',
+  'representante de Corantioquia ',
+  'delegado del Área Metropolitana ',
+  'secretario (e) de Movilidad ',
+  'representante de Corantioquia ',
+  'representante del Isvimed ',
+  'representante del Área Metropolitana ',
+  'director del Fonvalmed ',
+  'la niña María José Castañeda ',
+  'William Freidel ',
+  'niña María José Castañeda ',
+  'niño Juan David ',
+  'Jorge Pérez ',
+  'Subsecretaria Piedad Toro Duarte ',
+  'representante de Empresas Públicas ',
+  'Gerente de El Poblado ',
+  'el conejal ',
+  'la Personería ',
+  'la presidencia a cargo ',
+  'José Nicolás Duque Ossa ',
+  'Jorge Paredes ',
+  'Rosa Inés Gómez ',
+  'Representante de los trabajadores ',
+  'representante de Empresas Públicas de Medellín ',
+  'contralor ',
+  'José Fernando Álvarez ',
+  'Luis Fernando Londoño ',
+  'la Administración Municipal ',
+  'representante de la Contraloría ',
+  'representante de Medicina Legal y Ciencias Forenses ',
+  'Secretaría de Seguridad ',
+  'el concejal ',
+  'secretaria de Cultura Ciudadana ',
+  'Subsecretario encargado de Medio Ambiente ',
+  'subsecretario encargado de Medio Ambiente ',
+  'presidente de la JAC Robledo ',
+  'Gerente del proyecto ',
+  'representante de la Secretaría de Hacienda ',
+  'representante de Planeación ',
+  'secretario de Hacienda ',
+  'María Regina Hernández '
   ]
 especial = {'La Presidencia':'Nicolás Albeiro Echeverri Alvarán'}
 
@@ -186,6 +234,8 @@ def processTxt(fileName):
   f.close()
 
 def scrape(url):
+  global persons
+
   req = urllib2.Request(url)
   response = urllib2.urlopen(req)
   body = response.read()
@@ -196,6 +246,7 @@ def scrape(url):
     link = session.cssselect('a')
     #tomamos solo los links a actas, sin firmas
     if link[0].text.find('firmas') == -1:
+      persons = []
       print link[0].text
       relativeUrl_arr = url.split('/')
       relativeUrl_arr.remove(relativeUrl_arr[-1])
