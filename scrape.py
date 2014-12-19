@@ -1,10 +1,10 @@
 #!/usr/bin/python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 
-from xml.etree.ElementTree import Element, SubElement, tostring
-import os, lxml.html, lxml.etree, urllib2
+from xml.etree.ElementTree import Element, SubElement, tostring, parse
+import sys, os, lxml.html, lxml.etree, urllib2
 from subprocess import call
-
+import unicodedata, string
 
 inSpeach = 0
 speach = ""
@@ -12,29 +12,29 @@ speaker = ""
 persons = []
 titulos = [
   'concejal ', 
-  'concejala', 
+  'concejala ', 
   'La Presidencia', 
-  'señor', 
-  'señora', 
-  'comunidad', 
-  'doctor',
-  'doctora',
-  'joven',
-  'edil',
-  'maestro',
-  'profesor',
-  'servidora pública del Concejo',
-  'ciudadano',
-  'diputado',
-  'senador',
-  'secretario Privado',
-  'líder comunitario',
-  'representante de la Personería',
-  'el sacerdote',
-  'estudiante',
-  'Director de Planeación',
-  'presidente del Concejo',
-  'personero'
+  'señor ', 
+  'señora ', 
+  'comunidad ', 
+  'doctor ',
+  'doctora ',
+  'joven ',
+  'edil ',
+  'maestro ',
+  'profesor ',
+  'servidora pública del Concejo ',
+  'ciudadano ',
+  'diputado ',
+  'senador ',
+  'secretario Privado ',
+  'líder comunitario ',
+  'representante de la Personería ',
+  'el sacerdote ',
+  'estudiante ',
+  'Director de Planeación ',
+  'presidente del Concejo ',
+  'personero '
   ]
 especial = {'La Presidencia':'Nicolás Albeiro Echeverri Alvarán'}
 
@@ -70,24 +70,48 @@ def speakers(line, special = 0):
       print 'ERROR NAME: '+line
 
   deco_name = name.decode('utf-8')
-  personId = deco_name.lower().replace(' ', '-')
+  personId = ''.join(x for x in unicodedata.normalize('NFKD', deco_name) if x in string.ascii_letters).lower().replace(' ', '-')
+  print personId
   #guardamos el speaker
   speaker = '#'+personId
   #SPEAKERS
-  if name not in persons:
+  print 'Person: '+personId
+  if personId not in persons:
+    print 'No en persons'
     person = {
       'href' : "/ontology/person/127.0.0.1/"+personId,
       'id' : personId,
       'showAs' : deco_name
     }
-    persons.append(name)
+    persons.append(personId)
     SubElement(references, 'TLCPerson', person)
   return line[nameEnd+2:]
 
 
-          
+def get_speakers():
+  global persons
+  #Nos quedamos con todos los ids del archivo e iremos sumando a medida que recorremos
+  tree = parse('persons.xml')
+  root = tree.getroot()
+  for person in root.iter('TLCPerson'):
+    persons.append(person.get('id'))
 
-
+def set_speakers():
+  global persons
+  #Guardamos las personas
+  akoman = Element('akomaNtoso')
+  debate = SubElement(akoman, 'debate')
+  meta = SubElement(debate, 'meta')
+  references = SubElement(meta, 'references')
+  for personId in persons:
+    deco_name = personId.replace('-', ' ').title()
+    person = {
+      'href' : "/ontology/person/127.0.0.1/"+personId,
+      'id' : personId,
+      'showAs' : deco_name
+    }
+    SubElement(references, 'TLCPerson', person)
+  write(tostring(akoman), 'persons.xml')
 
 def process(line):
   global inSpeach, speach, speaker, debate_section
@@ -145,9 +169,9 @@ def processTxt(fileName):
   i = 0
   akoman = Element('akomaNtoso')
   debate = SubElement(akoman, 'debate')
+  debate_body = SubElement(debate, 'debateBody')
   meta = SubElement(debate, 'meta')
   references = SubElement(meta, 'references')
-  debate_body = SubElement(debate, 'debateBody')
   debate_section = SubElement(debate_body, 'debateSection')
 
   f = open('actas/'+fileName, "r+")
@@ -216,6 +240,8 @@ def scrape(url):
 
 #EMPIEZA
 #Vemos si tenemos procesadas todas las actas
+#get_speakers()
 url = 'http://www.concejodemedellin.gov.co/concejo/concejo/index.php?sub_cat=7543'
 scrape(url)
-#processTxt('24131.txt')
+#processTxt('21545.txt')
+#set_speakers()
