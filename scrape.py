@@ -9,9 +9,10 @@ import unicodedata, string
 inSpeach = 0
 speach = ""
 speaker = ""
+speaker_comp = ""
 persons = []
 titulos = [
- 'concejal ', 
+  'concejal ', 
   'concejala ', 
   'La Presidencia', 
   'señor', 
@@ -111,14 +112,14 @@ def speakers(line, special = 0):
   #Si es desconocido vemos si lo podemos sacar por la regla de la coma
   if (name == 'unknown'):
     titlePos = line.find(',')
-    if titlePos != -1:
-      nameEnd = line.find(':')
+    nameEnd = line.find(':')
+    if titlePos != -1 and nameEnd != -1:
       name = line[titlePos+2:nameEnd]
     else:
       print 'ERROR NAME: '+line
 
   deco_name = name.decode('utf-8')
-  personId = ''.join(x for x in unicodedata.normalize('NFKD', deco_name) if x in string.ascii_letters).lower().replace(' ', '-')
+  personId = ''.join(x for x in unicodedata.normalize('NFKD', deco_name) if x in string.ascii_letters).lower()
   #guardamos el speaker
   speaker = '#'+personId
   #SPEAKERS
@@ -159,8 +160,9 @@ def set_speakers():
   write(tostring(akoman), 'persons.xml')
 
 def process(line):
-  global inSpeach, speach, speaker, debate_section
-  if line != None and len(line) > 3:
+  global inSpeach, speach, speaker, debate_section, speaker_comp
+  #Vemos que no esté vacía la línea y que el largo sea mayor a 4 para dejar los números de las páginas afuera
+  if line != None and len(line) > 4:
     #Si está en speach agrego la linea salvo que tenga el cierre
     if inSpeach:
       #Vemos desde la posición de intervino si hay comillas o pasamos a la otra linea
@@ -175,7 +177,7 @@ def process(line):
           #anadimos el speach
           speach += line[:lastPos+1]
           xmlSpeach = SubElement(debate_section, 'speech', intervencion)
-          xmlSpeach.text = speach.decode('utf-8')
+          xmlSpeach.text = speach.decode('utf-8').replace(u"\u201C", '')
           #vaciamos las variables
           inSpeach = 0
           speaker = ""
@@ -193,11 +195,28 @@ def process(line):
         speach += line
         return
     else:
+      #Vemos si es un speaker parcial
+      if (len(speaker_comp) > 0):
+        if line.find(':') != -1 :
+          comp_line = speaker_comp + line
+          speaker_comp = ""
+          newLine = speakers(comp_line)
+          inSpeach = 1
+          process(newLine)
       #Vemos si son Intervinientes
-      if line.find('Intervino') != -1 and line.find(':') != -1 :
-        newLine = speakers(line)
-        inSpeach = 1
-        process(newLine)
+      if line.find('Intervino') != -1 or line.find('Palabras del') != -1:
+        #Vemos si el speaker esta en 2 lineas
+        if line.find(':') == -1 :
+          comp_start = line.find(',')
+          if comp_start != -1 :
+            speaker_comp = line[comp_start:]
+          else:
+            print "No se pudo obtener el nombre"
+            return
+        else:
+          newLine = speakers(line)
+          inSpeach = 1
+          process(newLine)
       if line.find('La Presidencia:') != -1:
         newLine = speakers(line, 1)
         inSpeach = 1
@@ -290,6 +309,6 @@ def scrape(url):
 #Vemos si tenemos procesadas todas las actas
 #get_speakers()
 url = 'http://www.concejodemedellin.gov.co/concejo/concejo/index.php?sub_cat=7543'
-scrape(url)
-#processTxt('21545.txt')
+#scrape(url)
+processTxt('21901.txt')
 #set_speakers()
