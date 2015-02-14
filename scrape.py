@@ -15,7 +15,7 @@ titulos = [
   'concejal ', 
   'concejala ', 
   'La Presidencia', 
-  'señor', 
+  'señor ', 
   'señora ', 
   'comunidad ', 
   'doctor ',
@@ -83,9 +83,13 @@ titulos = [
   'representante de la Secretaría de Hacienda ',
   'representante de Planeación ',
   'secretario de Hacienda ',
-  'María Regina Hernández '
+  'secretario (e) de Movilidad',
+  'Hábitat, Movilidad, Infraestructura y Sostenibilidad'
   ]
-especial = {'La Presidencia':'Nicolás Albeiro Echeverri Alvarán'}
+especial = {
+  'La Presidencia':'Nicolás Albeiro Echeverri Alvarán',
+  'secretario (e) de Movilidad':'secretario de Movilidad'
+}
 
 def speakers(line, special = 0):
   global titulos, speaker, references
@@ -96,7 +100,7 @@ def speakers(line, special = 0):
     if titlePos != -1:
       nameEnd = line.find(':')
       name = line[titlePos+len(titulo):nameEnd]
-      if special and titulo in especial:
+      if titulo in especial:
         name = especial[titulo]
       break
     else:
@@ -104,7 +108,7 @@ def speakers(line, special = 0):
       if titlePos != -1:
         nameEnd = line.find(':')
         name = line[titlePos+len(titulo):nameEnd]
-        if special and titulo in especial:
+        if titulo in especial:
           name = especial[titulo]
         break
       else:
@@ -170,6 +174,11 @@ def process(line):
       lastPos = line[1:].find('”')
       if lastPos != -1 or firstPos != -1:
         if ((lastPos <= firstPos or firstPos == -1) and lastPos != -1):
+          #print line[lastPos+6:]
+          if (line[lastPos+6:].strip() != '' ):
+            print 'Linea con intervención dentro: '+line;
+            speach += line
+            return
           #Vemos si es final de speech
           intervencion = {
             'by': speaker,
@@ -199,12 +208,12 @@ def process(line):
       if (len(speaker_comp) > 0):
         if line.find(':') != -1 :
           comp_line = speaker_comp + line
-          speaker_comp = ""
           newLine = speakers(comp_line)
           inSpeach = 1
           process(newLine)
+        speaker_comp = ""
       #Vemos si son Intervinientes
-      if line.find('Intervino') != -1 or line.find('Palabras del') != -1:
+      if line.find('Intervino') != -1 or line.find('Palabras del') != -1 or line.find('Continuó') != -1:
         #Vemos si el speaker esta en 2 lineas
         if line.find(':') == -1 :
           comp_start = line.find(',')
@@ -218,7 +227,7 @@ def process(line):
           inSpeach = 1
           process(newLine)
       if line.find('La Presidencia:') != -1:
-        newLine = speakers(line, 1)
+        newLine = speakers(line)
         inSpeach = 1
         process(newLine)
   return
@@ -289,7 +298,7 @@ def scrape(url):
       else:
         #Hay un tema acá y es que no le estoy pudiendo pasar 2 argumentos
         try:
-          call(['pdftotext', 'actas/'+pdfFile])
+          call('pdftotext -nopgbrk actas/'+pdfFile, shell=True);
           print 'se convertió a TXT: '+txtName
         except Exception as e:
           print 'ERROR no se convertió a TXT!!!!: ', e
@@ -309,6 +318,7 @@ def scrape(url):
 #Vemos si tenemos procesadas todas las actas
 #get_speakers()
 url = 'http://www.concejodemedellin.gov.co/concejo/concejo/index.php?sub_cat=7543'
-#scrape(url)
-processTxt('21901.txt')
+scrape(url)
+#processTxt('21559.txt')
+#call('pdftotext -nopgbrk actas/22991.pdf', shell=True)
 #set_speakers()
