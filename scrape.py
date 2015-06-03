@@ -263,10 +263,10 @@ def process(line):
           newLine = speakers(line)
           inSpeach = 1
           process(newLine)
-      if line.find('La Presidencia:') != -1:
-        newLine = speakers(line)
-        inSpeach = 1
-        process(newLine)
+    if line.find('La Presidencia:') != -1:
+      newLine = speakers(line)
+      inSpeach = 1
+      process(newLine)
   return
 
 def write(content, destination):
