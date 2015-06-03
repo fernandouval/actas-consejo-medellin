@@ -295,7 +295,8 @@ def processTxt(fileName):
     #Vemos si trae el id del acta (sino se podría poner con el nombre del archivo asumiendo que se guardó de esa manera)
     if line.find('ÍNDICE') != -1:
       debate_heading = SubElement(debate_section, 'heading')
-      debate_heading.text = lines[i+1].decode('utf-8')
+      actaTitle = lines[i+1].decode('utf-8')
+      debate_heading.text = actaTitle
     if line.find('FECHA') != -1:
       date_pos = lines[i+2].find(',')
       if date_pos:
@@ -319,9 +320,9 @@ def processTxt(fileName):
   prefaceDate = {'date': prefaceTime}
   prefaceDateak = SubElement(preface, 'docDate', prefaceDate)
   prefacepdfUrl = {'href': pdfUrl}
-  prefacepdfUrlak = SubElement(preface, 'link', pdfUrl)
+  prefacepdfUrlak = SubElement(preface, 'link', prefacepdfUrl)
   prefaceTitle = SubElement(preface, 'docTitle')
-  prefaceTitle.text = debate_heading.text
+  prefaceTitle.text = actaTitle
   #Order year-month
   yearDate = SubElement(debate_section_year, 'heading')
   yearDate.text = yearTime
