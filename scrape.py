@@ -18,6 +18,7 @@ titulos = [
   'concejala ',
   'Concejala ', 
   'La Presidencia', 
+  'Alcalde de Medellín',
   'señor ', 
   'señora ', 
   'comunidad ', 
@@ -39,12 +40,16 @@ titulos = [
   'Director de Planeación ',
   'presidente del Concejo ',
   'personero ',
+  'el Secretario Vicealcalde de Gobernabilidad, Seguridad y Servicio a la Ciudadanía ',
+  'la Secretaría de Gobierno del Departamento, programa ‘Entornos Protectores’ ', 
   'funcionaria de la Secretaría de Las Mujeres ',
   'el representante de la Secretaría de Seguridad ',
   'el representante del Área Metropolitana del Valle de Aburrá ',
   'en representación de Sintraemdes ',
   'en representación de Sintraemdes Medellín ',
   'la Secretaría del Medio Ambiente ',
+  'Secretaria Vicealcaldesa de Educación, Cultura, Participación, Recreación y Deporte ',
+  'vicealcalde de de Salud, Inclusión Social y Familia ',
   'contralora (e ) ',
   'representante legal de la Junta de Acción Comunal de Bellavista ',
   'representante de Corantioquia ',
@@ -94,7 +99,7 @@ titulos = [
   'Banca de Inversión ',
   'Vamos Mujer ',
   'Reconciliación y la Convivencia ',
-  'Alcalde de Medellín',
+  'corporación Universidad Remington '
 ]
 especial = {
   'La Presidencia':'Nicolás Albeiro Echeverri Alvarán',
@@ -115,7 +120,7 @@ date_translation = {
   'noviembre':'11',
   'diciembre':'12',
 }
-base_dir = '/home/notroot/actas-consejo-medellin'
+base_dir = '/home/notroot/sayit/sayit.mysociety.org'
 
 def speakers(line, special = 0):
   global titulos, speaker, references
@@ -181,6 +186,7 @@ def set_speakers():
   akoman = Element('akomaNtoso')
   debate = SubElement(akoman, 'debate')
   meta = SubElement(debate, 'meta')
+
   references = SubElement(meta, 'references')
   for personId in persons:
     deco_name = personId.replace('-', ' ').title()
@@ -243,7 +249,8 @@ def process(line):
           process(newLine)
         speaker_comp = ""
       #Vemos si son Intervinientes
-      if line.find('Intervino') != -1 or line.find('Palabras del') != -1 or line.find('Continuó') != -1:
+      #if line.find('Intervino') != -1 or line.find('Palabras del') != -1 or line.find('Continuó') != -1:
+    if line.find('Intervino') != -1 or line.find('Palabras del') != -1 or line.find('Continuó') != -1 or line.find('Interviene') != -1 or line.find('Continúa') != -1 or line.find('La Secretaría') != -1 or line.find('Interpela') != -1 or line.find('Responde') != -1 or line.find('Informa') != -1:
         #Vemos si el speaker esta en 2 lineas
         if line.find(':') == -1 :
           comp_start = line.find(',')
@@ -268,14 +275,17 @@ def write(content, destination):
   f.close()
 
 def processTxt(fileName):
-  global akoman, debate, meta, references, debate_body, debate_section, startTime
+  global akoman, debate, meta, references, debate_body, debate_section, startTime, pdfUrl
   i = 0
   akoman = Element('akomaNtoso')
   debate = SubElement(akoman, 'debate')
   debate_body = SubElement(debate, 'debateBody')
   meta = SubElement(debate, 'meta')
+  preface = SubElement(debate, 'preface')
   references = SubElement(meta, 'references')
-  debate_section = SubElement(debate_body, 'debateSection')
+  debate_section_year = SubElement(debate_body, 'debateSection')
+  debate_section_month = SubElement(debate_section_year, 'debateSection')
+  debate_section = SubElement(debate_section_month, 'debateSection')
   dabate_date = SubElement(debate, 'docDate')
 
   f = open('actas/'+fileName, "r+")
@@ -289,7 +299,7 @@ def processTxt(fileName):
     if line.find('FECHA') != -1:
       date_pos = lines[i+2].find(',')
       if date_pos:
-        speech_date_str = lines[i+2][date_pos+2:].replace('de ','').replace('\n','').replace('\r', '')
+        speech_date_str = lines[i+2][date_pos+2:].replace('de ','').replace('\n','').replace('\r', '').replace('°','')
         speech_date_arr = speech_date_str.split(' ')
         print speech_date_arr[1]
         if speech_date_arr[1] in date_translation:
@@ -297,17 +307,33 @@ def processTxt(fileName):
           speech_date_str = speech_date_str.replace(speech_date_arr[1], date_translation[speech_date_arr[1]])
           speech_date_obj = strptime(speech_date_str, "%d %m %Y")
           startTime = strftime("%Y-%m-%dT%H:%M:%S", speech_date_obj)
+          prefaceTime = strftime("%Y-%m-%d", speech_date_obj)
+          yearTime = strftime("%Y", speech_date_obj)
+          monthTime = strftime("%m", speech_date_obj)
         else:
           print "No se pudo convertir la fecha"
       #print speechDate
     process(line)
     i+=1
+  #preface
+  prefaceDate = {'date': prefaceTime}
+  prefaceDateak = SubElement(preface, 'docDate', prefaceDate)
+  prefacepdfUrl = {'href': pdfUrl}
+  prefacepdfUrlak = SubElement(preface, 'link', pdfUrl)
+  prefaceTitle = SubElement(preface, 'docTitle')
+  prefaceTitle.text = debate_heading.text
+  #Order year-month
+  yearDate = SubElement(debate_section_year, 'heading')
+  yearDate.text = yearTime
+  monthDate = SubElement(debate_section_month, 'heading')
+  monthDate.text = monthTime
   write(tostring(akoman), 'actas-xml/'+fileName.split('.')[0]+'.xml')
-
   f.close()
+  #print base_dir+'/manage.py load_akomantoso --file=actas-xml/23613.xml--instance=concejodemedellin2013 --commit'
+  #call(base_dir+'/manage.py load_akomantoso --file=/home/notroot/actas-consejo-medellin/actas-xml/23613.xml --instance=concejodemedellin2013 --commit', shell=True);
 
 def scrape(url):
-  global persons
+  global persons, pdfUrl
 
   req = urllib2.Request(url)
   response = urllib2.urlopen(req)
@@ -356,7 +382,8 @@ def scrape(url):
           processTxt(txtName)
           print 'Se convirtió a xml: '+xmlName
           print 'Llamando a acomantoso'
-          call(base_dir+'/manage.py load_akomantoso --file=actas-xml/'+xmlName+' --instance=concejodemedellin2013 --commit', shell=True);
+      #Este es el call para hacerlo en orden
+          call(base_dir+'/manage.py load_akomantoso --file=/home/notroot/actas-consejo-medellin/actas-xml/'+xmlName+' --instance=concejodemedellin --commit', shell=True);
         except Exception as e:
           print 'ERROR no se convertió a XML o no subió a Akomantoso!!!!: ', e
           continue
@@ -365,8 +392,9 @@ def scrape(url):
 #Vemos si tenemos procesadas todas las actas
 #get_speakers()
 url = 'http://www.concejodemedellin.gov.co/concejo/concejo/index.php?sub_cat=7543'
-#scrape(url)
-processTxt('23613.txt')
+scrape(url)
+#este es para procesar un txt individual
+#processTxt('23613.txt')
 #call('pdftotext -nopgbrk actas/22991.pdf', shell=True)
 #set_speakers()
 #call('cd /home/sayit/sayit.mysociety.org/manage.py load_akomantoso --file=/home/sayit/actas-consejo-medellin/actas-xml/24131.xml --instance=concejodemedellin2013 --commit', shell=True);
