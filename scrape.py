@@ -284,8 +284,6 @@ def processTxt(fileName):
   preface = SubElement(debate, 'preface')
   references = SubElement(meta, 'references')
   debate_section_year = SubElement(debate_body, 'debateSection')
-  debate_section_month = SubElement(debate_section_year, 'debateSection')
-  debate_section = SubElement(debate_section_month, 'debateSection')
   dabate_date = SubElement(debate, 'docDate')
 
   f = open('actas/'+fileName, "r+")
@@ -294,9 +292,7 @@ def processTxt(fileName):
   for line in lines:
     #Vemos si trae el id del acta (sino se podría poner con el nombre del archivo asumiendo que se guardó de esa manera)
     if line.find('ÍNDICE') != -1:
-      debate_heading = SubElement(debate_section, 'heading')
       actaTitle = lines[i+1].decode('utf-8')
-      debate_heading.text = actaTitle
     if line.find('FECHA') != -1:
       date_pos = lines[i+2].find(',')
       if date_pos:
@@ -311,6 +307,16 @@ def processTxt(fileName):
           prefaceTime = strftime("%Y-%m-%d", speech_date_obj)
           yearTime = strftime("%Y", speech_date_obj)
           monthTime = strftime("%m", speech_date_obj)
+
+          #Order year-month
+          yearDate = SubElement(debate_section_year, 'heading')
+          yearDate.text = yearTime
+          debate_section_month = SubElement(debate_section_year, 'debateSection')
+          monthDate = SubElement(debate_section_month, 'heading')
+          monthDate.text = monthTime
+          debate_section = SubElement(debate_section_month, 'debateSection')
+          debate_heading = SubElement(debate_section, 'heading')
+          debate_heading.text = actaTitle
         else:
           print "No se pudo convertir la fecha"
       #print speechDate
@@ -321,13 +327,8 @@ def processTxt(fileName):
   prefaceDateak = SubElement(preface, 'docDate', prefaceDate)
   prefacepdfUrl = {'href': pdfUrl}
   prefacepdfUrlak = SubElement(preface, 'link', prefacepdfUrl)
-  prefaceTitle = SubElement(preface, 'docTitle')
-  prefaceTitle.text = actaTitle
-  #Order year-month
-  yearDate = SubElement(debate_section_year, 'heading')
-  yearDate.text = yearTime
-  monthDate = SubElement(debate_section_month, 'heading')
-  monthDate.text = monthTime
+  #prefaceTitle = SubElement(preface, 'docTitle')
+  #prefaceTitle.text = actaTitle
   write(tostring(akoman), 'actas-xml/'+fileName.split('.')[0]+'.xml')
   f.close()
   #print base_dir+'/manage.py load_akomantoso --file=actas-xml/23613.xml--instance=concejodemedellin2013 --commit'
