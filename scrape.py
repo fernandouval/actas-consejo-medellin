@@ -305,7 +305,7 @@ def processTxt(fileName):
           startTime = strftime("%Y-%m-%dT%H:%M:%S", speech_date_obj)
           prefaceTime = strftime("%Y-%m-%d", speech_date_obj)
           yearTime = strftime("%Y", speech_date_obj)
-          monthTime = strftime("%m", speech_date_obj)
+          monthTime = speech_date_arr[1].title()
 
           #Order year-month
           yearDate = SubElement(debate_section_year, 'heading')
@@ -322,8 +322,8 @@ def processTxt(fileName):
     process(line)
     i+=1
   #preface
-  prefaceDate = {'date': prefaceTime}
-  prefaceDateak = SubElement(preface, 'docDate', prefaceDate)
+  #prefaceDate = {'date': prefaceTime}
+  #prefaceDateak = SubElement(preface, 'docDate', prefaceDate)
   prefacepdfUrl = {'href': pdfUrl}
   prefacepdfUrlak = SubElement(preface, 'link', prefacepdfUrl)
   #prefaceTitle = SubElement(preface, 'docTitle')
