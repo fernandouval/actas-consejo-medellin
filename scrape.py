@@ -284,7 +284,6 @@ def processTxt(fileName):
   preface = SubElement(debate, 'preface')
   references = SubElement(meta, 'references')
   debate_section_year = SubElement(debate_body, 'debateSection')
-  dabate_date = SubElement(debate, 'docDate')
 
   f = open('actas/'+fileName, "r+")
   lines = f.readlines()
